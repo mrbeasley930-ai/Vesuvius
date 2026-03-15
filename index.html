@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Vesuvius Grammatica</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0400;display:flex;align-items:center;justify-content:center;min-height:100vh;overflow:hidden;font-family:'Press Start 2P',monospace}
+.game-wrap{position:relative;width:100%;max-width:680px;aspect-ratio:680/480}
+canvas{display:block;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges;border:2px solid #3d1200;border-radius:4px}
+.ov{position:absolute;top:0;left:0;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;z-index:10}
+.ov.on{pointer-events:auto}
+.qb{background:rgba(10,4,0,0.94);border:3px solid #F5C440;border-radius:6px;padding:16px 20px;max-width:400px;width:92%;text-align:center;box-shadow:0 0 40px rgba(245,196,64,0.15)}
+.qw{font-size:18px;color:#F5C440;margin:0 0 6px;text-shadow:0 0 10px rgba(245,196,64,0.4)}
+.qp{font-size:9px;color:#aa9060;margin:0 0 14px}
+.qo{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.qo button{font-family:'Press Start 2P',monospace;font-size:8px;padding:8px 14px;border:2px solid #F5C440;border-radius:3px;background:transparent;color:#F5C440;cursor:pointer;transition:all .15s;line-height:1.4}
+.qo button:hover{background:#F5C440;color:#1a0a00}
+.qo button.cfl{background:#22c55e;border-color:#22c55e;color:#000;pointer-events:none;box-shadow:0 0 15px rgba(34,197,94,0.4)}
+.qo button.wfl{background:#dc2626;border-color:#dc2626;color:#fff;pointer-events:none;box-shadow:0 0 15px rgba(220,38,38,0.4)}
+.qo button.dim{opacity:.2;pointer-events:none}
+.qn{margin:12px 0 0;padding:10px 12px;border-radius:4px;font-size:7px;line-height:1.8;display:none;text-align:left}
+.qn.cn{display:block;background:rgba(34,197,94,0.12);border:2px solid rgba(34,197,94,0.5);color:#86efac}
+.qn.wn{display:block;background:rgba(220,38,38,0.12);border:2px solid rgba(220,38,38,0.5);color:#fca5a5}
+.qnl{display:block;margin:0 0 4px;font-size:8px;text-transform:uppercase;letter-spacing:1px}
+.cn .qnl{color:#22c55e}.wn .qnl{color:#ef4444}
+.spd{font-size:7px;color:#ff6600;margin:6px 0 0;text-align:center;opacity:0;transition:opacity .3s}
+.spd.show{opacity:1}
+.hud{position:absolute;top:10px;left:14px;right:14px;display:flex;justify-content:space-between;font-size:8px;color:#F5C440;pointer-events:none;z-index:5;text-shadow:1px 1px 0 #000,0 0 6px rgba(245,196,64,0.3)}
+.hud .lvl{color:#ff8800}
+.ss{background:rgba(10,4,0,0.95);color:#F5C440;text-align:center;padding:24px 22px;border-radius:6px;border:3px solid #F5C440;box-shadow:0 0 60px rgba(245,196,64,0.1);max-width:420px;width:92%}
+.ss h2{font-size:14px;margin:0 0 6px;text-shadow:0 0 15px rgba(245,196,64,0.5)}
+.ss .sub{font-size:7px;color:#aa6620;margin:0 0 16px;letter-spacing:2px}
+.ss p{font-size:7px;color:#aa9060;margin:0 0 16px;line-height:2}
+.gb{font-family:'Press Start 2P',monospace;font-size:10px;padding:10px 28px;border:2px solid #F5C440;border-radius:3px;background:transparent;color:#F5C440;cursor:pointer;transition:all .2s}
+.gb:hover{background:#F5C440;color:#1a0a00;box-shadow:0 0 20px rgba(245,196,64,0.4)}
+.gosc{background:rgba(10,4,0,0.96);color:#ef4444;text-align:center;padding:22px;border-radius:6px;border:3px solid #ef4444;box-shadow:0 0 40px rgba(239,68,68,0.1);max-width:420px;width:92%}
+.gosc h2{font-size:14px;margin:0 0 8px;text-shadow:0 0 10px rgba(239,68,68,0.4)}
+.gosc .fs{font-size:12px;color:#F5C440;margin:0 0 4px}
+.gosc .si{font-size:7px;color:#aa9060;margin:0 0 14px}
+.gosc .gb{border-color:#F5C440;color:#F5C440;margin:0 4px}
+.gosc .gb:hover{background:#F5C440;color:#1a0a00}
+.gosc .gb.submit{border-color:#22c55e;color:#22c55e}
+.gosc .gb.submit:hover{background:#22c55e;color:#000}
+.btn-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.init-entry{margin:0 0 14px}
+.init-entry .label{font-size:7px;color:#aa9060;margin:0 0 10px}
+.init-slots{display:flex;gap:10px;justify-content:center;align-items:center;margin:0 0 8px}
+.init-slot{display:flex;flex-direction:column;align-items:center;gap:4px}
+.init-slot button{font-family:'Press Start 2P',monospace;font-size:10px;width:32px;height:24px;border:1.5px solid #F5C440;border-radius:2px;background:transparent;color:#F5C440;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
+.init-slot button:hover{background:rgba(245,196,64,0.15)}
+.init-letter{font-size:20px;color:#F5C440;text-shadow:0 0 8px rgba(245,196,64,0.4);width:32px;height:32px;border:2px solid #F5C440;border-radius:3px;display:flex;align-items:center;justify-content:center;background:rgba(245,196,64,0.05)}
+.lb{margin:14px 0 0;text-align:center;display:none}
+.lb h3{font-size:9px;color:#F5C440;margin:0 0 10px;letter-spacing:1px}
+.lb-table{width:100%;max-width:300px;margin:0 auto}
+.lb-row{display:flex;justify-content:space-between;align-items:center;padding:3px 8px;font-size:7px;border-bottom:1px solid rgba(245,196,64,0.1)}
+.lb-row.header{color:#aa6620;border-bottom:1px solid rgba(245,196,64,0.3);margin:0 0 2px;padding-bottom:6px}
+.lb-row .rank{color:#aa9060;width:30px;text-align:left}
+.lb-row .name{color:#F5C440;width:60px;text-align:center;letter-spacing:2px}
+.lb-row .lb-score{color:#ff8800;width:50px;text-align:right}
+.lb-row .lb-lvl{color:#aa9060;width:50px;text-align:right}
+.lb-row.hl{background:rgba(245,196,64,0.08);border-radius:2px}
+.lb-row.hl .name{color:#ff8800;text-shadow:0 0 6px rgba(255,136,0,0.3)}
+.no-scores{font-size:7px;color:#aa9060;padding:10px 0}
+.lives-lost{animation:pulse-red .3s}
+@keyframes pulse-red{0%,100%{color:#F5C440}50%{color:#ef4444;text-shadow:0 0 15px rgba(239,68,68,0.6)}}
+.db-status{font-size:6px;color:#aa6620;margin:6px 0 0;opacity:0.7}
+</style>
+</head>
+<body>
+<div class="game-wrap">
+<canvas id="c" width="680" height="480"></canvas>
+<div class="hud"><span id="hs">SCORE 0</span><span id="hlvl" class="lvl">LEVEL I</span><span id="hl">♥ ♥ ♥</span><span id="hk">STREAK 0</span></div>
+<div class="ov on" id="ov1">
+<div class="ss" id="ss">
+<h2>VESUVIUS GRAMMATICA</h2>
+<div class="sub">— ANNO DOMINI LXXIX —</div>
+<p>Lava rains from Vesuvius!<br><br>Parse each Latin word to survive.<br>The eruption intensifies as you score!<br>Wrong answers lose a life.<br><br>♥ ♥ ♥ &nbsp; 3 lives</p>
+<div class="btn-row">
+<button class="gb" onclick="startGame()">START</button>
+<button class="gb" onclick="toggleMenuLB()" style="font-size:8px;padding:10px 18px">SCORES</button>
+</div>
+<div class="lb" id="menu-lb"></div>
+<div class="db-status" id="db-status"></div>
+</div>
+<div class="gosc" id="gover" style="display:none">
+<h2>POMPEII HAS FALLEN</h2>
+<div class="fs" id="fscore"></div>
+<div class="si" id="fstreak"></div>
+<div class="init-entry" id="init-entry">
+<div class="label">ENTER YOUR INITIALS</div>
+<div class="init-slots" id="init-slots"></div>
+</div>
+<div class="btn-row">
+<button class="gb submit" id="submit-btn" onclick="submitScore()">SAVE SCORE</button>
+<button class="gb" onclick="startGame()">PLAY AGAIN</button>
+</div>
+<div class="lb" id="go-lb"></div>
+</div>
+</div>
+<div class="ov" id="ov2">
+<div class="qb" id="qb" style="display:none">
+<div class="qw" id="qw"></div>
+<div class="qp" id="qp"></div>
+<div class="qo" id="qo"></div>
+<div class="qn" id="qn"><span class="qnl" id="qnl"></span><span id="qnt"></span></div>
+<div class="spd" id="spd"></div>
+</div>
+</div>
+</div>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+
+<script>
+// ===== FIREBASE =====
+var firebaseConfig = {
+  apiKey: "AIzaSyB8aEmGkx3Ixd1IJMcTmvYZ363Bo6T0gy0",
+  authDomain: "latin-games.firebaseapp.com",
+  databaseURL: "https://latin-games-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "latin-games",
+  storageBucket: "latin-games.firebasestorage.app",
+  messagingSenderId: "168828913143",
+  appId: "1:168828913143:web:da694aca3e5727a2b45af2"
+};
+firebase.initializeApp(firebaseConfig);
+var db = firebase.database();
+var lbRef = db.ref("leaderboard");
+var leaderboard = [];
+var dbConnected = false;
+
+// Listen for realtime updates
+lbRef.orderByChild("score").limitToLast(50).on("value", function(snap) {
+  dbConnected = true;
+  leaderboard = [];
+  snap.forEach(function(child) {
+    leaderboard.push(child.val());
+  });
+  leaderboard.sort(function(a, b) { return b.score - a.score; });
+  document.getElementById("db-status").textContent = "Connected \u2022 " + leaderboard.length + " scores";
+}, function(err) {
+  dbConnected = false;
+  document.getElementById("db-status").textContent = "Offline mode";
+});
+
+function saveToDB(entry) {
+  return lbRef.push(entry);
+}
+
+// ===== GAME ENGINE =====
+var C=document.getElementById("c"),X=C.getContext("2d"),W=680,H=480,GY=H-70,PW=24,PH=30;
+var CHARS="ABCDEFGHIJKLMNOPQRSTUVWXYZ",initials=[0,0,0];
+
+var levels=[
+  {name:"I",label:"LEVEL I",ms:0,sr:0.05,sn:1.6,sx:2.6,col:"#aa9060"},
+  {name:"II",label:"LEVEL II",ms:3,sr:0.07,sn:2.0,sx:3.0,col:"#cc8030"},
+  {name:"III",label:"LEVEL III",ms:6,sr:0.09,sn:2.3,sx:3.4,col:"#ee6620"},
+  {name:"IV",label:"LEVEL IV",ms:10,sr:0.11,sn:2.6,sx:3.8,col:"#ff4400"},
+  {name:"V",label:"LEVEL V",ms:15,sr:0.14,sn:3.0,sx:4.2,col:"#ff2200"},
+  {name:"VI",label:"ERUPTION!",ms:20,sr:0.17,sn:3.3,sx:4.8,col:"#ff0000"},
+];
+function getLevel(s){for(var i=levels.length-1;i>=0;i--)if(s>=levels[i].ms)return levels[i];return levels[0];}
+
+var Qs=[
+{w:"puellam",p:"What case?",a:"Accusative",o:["Nominative","Accusative","Ablative","Dative"],n:"1st decl. acc. sing.: -am always = accusative. Direct object."},
+{w:"servus",p:"What case?",a:"Nominative",o:["Nominative","Accusative","Genitive","Ablative"],n:"2nd decl. nom. sing.: -us = nominative. This is your subject."},
+{w:"domini",p:"What case?",a:"Genitive",o:["Nominative","Genitive","Dative","Vocative"],n:"2nd decl. gen. sing.: -i = 'of the master'. Genitive shows possession."},
+{w:"militibus",p:"What case?",a:"Dative",o:["Accusative","Genitive","Dative","Nominative"],n:"3rd decl. dat./abl. pl.: -ibus serves both. Context decides which."},
+{w:"regem",p:"What case?",a:"Accusative",o:["Nominative","Accusative","Ablative","Genitive"],n:"3rd decl. acc. sing.: -em = accusative. Direct object."},
+{w:"vocum",p:"What case?",a:"Genitive",o:["Nominative","Genitive","Accusative","Dative"],n:"3rd decl. gen. pl.: -um = 'of the voices'."},
+{w:"templo",p:"What case?",a:"Ablative",o:["Nominative","Dative","Ablative","Accusative"],n:"2nd decl. dat./abl. sing.: -o serves both. After 'in' or 'ex' = ablative."},
+{w:"cives",p:"What case?",a:"Nominative",o:["Nominative","Accusative","Genitive","Ablative"],n:"3rd decl. nom./acc. pl.: -es can be either! Check the verb to decide."},
+{w:"pueros",p:"What case?",a:"Accusative",o:["Nominative","Accusative","Genitive","Dative"],n:"2nd decl. acc. pl.: -os always = accusative plural."},
+{w:"ancillae",p:"What case?",a:"Genitive",o:["Nominative","Genitive","Dative","Accusative"],n:"1st decl.: -ae = gen. sing., dat. sing., OR nom. pl. Classic GCSE trap!"},
+{w:"nautarum",p:"What case?",a:"Genitive",o:["Nominative","Genitive","Accusative","Ablative"],n:"1st decl. gen. pl.: -arum = 'of the sailors'. Unmistakable."},
+{w:"corpus",p:"What case?",a:"Nominative",o:["Nominative","Accusative","Genitive","Ablative"],n:"3rd decl. neuter: nom. and acc. are identical. Context tells you which."},
+{w:"muros",p:"What case?",a:"Accusative",o:["Nominative","Accusative","Genitive","Dative"],n:"2nd decl. acc. pl.: -os = accusative. 'The walls' as direct object."},
+{w:"flumini",p:"What case?",a:"Dative",o:["Nominative","Genitive","Dative","Ablative"],n:"3rd decl. neuter dat. sing.: -i. 'To/for the river.'"},
+{w:"laudavit",p:"What tense?",a:"Perfect",o:["Present","Imperfect","Perfect","Pluperfect"],n:"Perfect: -v- stem + -it. Completed single action: 'he praised'."},
+{w:"audiebamus",p:"What tense?",a:"Imperfect",o:["Present","Imperfect","Perfect","Pluperfect"],n:"Imperfect: spot -ba-. Ongoing/repeated past: 'we were listening'."},
+{w:"ceperunt",p:"What tense?",a:"Perfect",o:["Present","Imperfect","Perfect","Pluperfect"],n:"Perfect 3rd pl.: -erunt. capio → cepi → ceperunt = 'they seized'."},
+{w:"currunt",p:"What tense?",a:"Present",o:["Present","Imperfect","Perfect","Future"],n:"Present: no tense marker. curr-unt = 'they run'."},
+{w:"viderat",p:"What tense?",a:"Pluperfect",o:["Imperfect","Perfect","Pluperfect","Future"],n:"Pluperfect: stem + -era- + ending. 'He had seen'. Further back than perfect."},
+{w:"mittebat",p:"What tense?",a:"Imperfect",o:["Present","Imperfect","Perfect","Pluperfect"],n:"Imperfect: -ba- marker. 'He was sending'. -ba- = imperfect, always."},
+{w:"cucurrerunt",p:"What tense?",a:"Perfect",o:["Present","Imperfect","Perfect","Pluperfect"],n:"Perfect with reduplication: cu-curr-erunt. 'They ran'."},
+{w:"docuerant",p:"What tense?",a:"Pluperfect",o:["Imperfect","Perfect","Pluperfect","Future"],n:"Pluperfect: docu- + -era- + -nt. 'They had taught'. -era- = pluperfect."},
+{w:"amabunt",p:"What tense?",a:"Future",o:["Present","Imperfect","Future","Perfect"],n:"Future (1st/2nd conj.): -b- before ending. 'They will love'. Don't confuse -b- with -ba-!"},
+{w:"festinat",p:"What person?",a:"3rd singular",o:["1st singular","2nd singular","3rd singular","3rd plural"],n:"3rd sing.: -t ending. 'He/she/it hurries'."},
+{w:"portamus",p:"What person?",a:"1st plural",o:["1st singular","1st plural","2nd plural","3rd plural"],n:"1st pl.: -mus. 'We carry'. -mus always = 'we'."},
+{w:"navigabatis",p:"What person?",a:"2nd plural",o:["1st plural","2nd singular","2nd plural","3rd plural"],n:"2nd pl.: -tis. 'You all were sailing'. -ba- = imperfect, -tis = 2nd pl."},
+{w:"dormio",p:"What person?",a:"1st singular",o:["1st singular","2nd singular","3rd singular","1st plural"],n:"1st sing.: -o in present. 'I sleep'. In perfect, 1st sing. = -i."},
+{w:"pugnant",p:"What voice?",a:"Active",o:["Active","Passive"],n:"Active: -ant = active 3rd pl. Subject DOES the action: 'they fight'."},
+{w:"capitur",p:"What voice?",a:"Passive",o:["Active","Passive"],n:"Passive: -tur = 3rd sing. passive. Subject RECEIVES action: 'he is captured'."},
+{w:"laudantur",p:"What voice?",a:"Passive",o:["Active","Passive"],n:"Passive: -ntur = 3rd pl. passive. Active laudant → passive laudantur."},
+{w:"necaverunt",p:"What voice?",a:"Active",o:["Active","Passive"],n:"Active: -erunt = active perfect 3rd pl. Passive perfect uses PPP + esse."},
+{w:"currentem",p:"What form?",a:"Present participle",o:["Present participle","Perfect participle","Infinitive","Subjunctive"],n:"Pres. act. participle acc.: -entem. Verbal adjective = 'running'."},
+{w:"missus",p:"What form?",a:"Perfect participle",o:["Present participle","Perfect participle","Gerund","Adjective"],n:"PPP: miss-us. 'Having been sent'. Always passive, completed action."},
+{w:"audire",p:"What form?",a:"Infinitive",o:["Infinitive","Imperative","Subjunctive","Participle"],n:"Pres. act. infinitive: -ire (4th conj.). 'To hear'."},
+{w:"noli",p:"What form?",a:"Imperative",o:["Infinitive","Imperative","Indicative","Subjunctive"],n:"Neg. imperative: noli + inf. = 'don't!' Literally 'be unwilling to...'"},
+];
+
+var lv,sc,st,bs,gg,qa,lk,uq,ld,pt,sk,plx,fi,cq,cL,embers=[];
+function initE(){embers=[];for(var i=0;i<25;i++)embers.push({x:Math.random()*W,y:Math.random()*H,s:.5+Math.random()*1.5,vy:-.3-Math.random()*.5,vx:(Math.random()-.5)*.3,a:Math.random()});}
+function PX(x,y,w,h,c){X.fillStyle=c;X.fillRect(Math.round(x),Math.round(y),w,h);}
+
+function drawSky(){var g=X.createLinearGradient(0,0,0,GY),i=Math.min(1,sc/20);g.addColorStop(0,"rgb("+Math.round(10+i*20)+","+Math.round(4+i*4)+",0)");g.addColorStop(.3,"rgb("+Math.round(15+i*30)+","+Math.round(6+i*6)+",0)");g.addColorStop(.6,"rgb("+Math.round(26+i*40)+","+Math.round(8+i*8)+",0)");g.addColorStop(.85,"rgb("+Math.round(61+i*60)+","+Math.round(18+i*12)+",0)");g.addColorStop(1,"rgb("+Math.round(21+i*32)+","+Math.round(6+i*6)+",0)");X.fillStyle=g;X.fillRect(0,0,W,GY);for(var j=0;j<40;j++){X.fillStyle="rgba(255,180,80,"+(0.1+Math.sin(Date.now()/800+j*2.7)*0.12)+")";X.fillRect((j*97+13)%W,(j*53+7)%(GY-80),1,1);}}
+
+function drawVolcano(){X.fillStyle="#2a1a0e";X.beginPath();X.moveTo(W/2-200,GY);X.lineTo(W/2-50,GY-220);X.lineTo(W/2-22,GY-245);X.lineTo(W/2+22,GY-245);X.lineTo(W/2+50,GY-220);X.lineTo(W/2+200,GY);X.closePath();X.fill();X.fillStyle="#3d2817";X.beginPath();X.moveTo(W/2-170,GY);X.lineTo(W/2-45,GY-210);X.lineTo(W/2-22,GY-240);X.lineTo(W/2+22,GY-240);X.lineTo(W/2+45,GY-210);X.lineTo(W/2+170,GY);X.closePath();X.fill();X.fillStyle="#5c3a1e";X.beginPath();X.moveTo(W/2-130,GY);X.lineTo(W/2-38,GY-200);X.lineTo(W/2-20,GY-235);X.lineTo(W/2+20,GY-235);X.lineTo(W/2+38,GY-200);X.lineTo(W/2+130,GY);X.closePath();X.fill();X.fillStyle="#8B2500";X.beginPath();X.moveTo(W/2-20,GY-245);X.lineTo(W/2+20,GY-245);X.lineTo(W/2+16,GY-232);X.lineTo(W/2-14,GY-232);X.closePath();X.fill();X.fillStyle="#B03000";X.fillRect(W/2-10,GY-238,20,6);var p=Math.sin(Date.now()/150)*.3+.7,gs=25+Math.sin(Date.now()/200)*8+Math.min(sc,20)*1.5,gd=X.createRadialGradient(W/2,GY-242,3,W/2,GY-242,gs);gd.addColorStop(0,"rgba(255,120,30,"+p*.7+")");gd.addColorStop(.5,"rgba(255,60,10,"+p*.3+")");gd.addColorStop(1,"rgba(255,40,5,0)");X.fillStyle=gd;X.fillRect(W/2-60,GY-290,120,70);}
+
+function drawGround(){X.fillStyle="#3d2510";X.fillRect(0,GY,W,H-GY);X.fillStyle="#4a3520";X.fillRect(0,GY,W,4);X.fillStyle="#5c4530";X.fillRect(0,GY,W,2);for(var i=0;i<30;i++){X.fillStyle=i%2?"#2a1a0e":"#3d2817";X.fillRect((i*47+11)%W,GY+10+(i%4)*12,6+(i%5)*2,2);}for(var i=0;i<5;i++){var bx=50+i*140;X.fillStyle="#4a3520";X.fillRect(bx,GY+20,20,14);X.fillRect(bx+2,GY+8,16,12);X.fillStyle="#3d2817";X.fillRect(bx+4,GY+12,4,4);X.fillRect(bx+12,GY+12,4,4);}}
+
+function drawPlayer(x){var y=GY-PH;PX(x+8,y,8,4,"#e8c090");PX(x+6,y+4,12,8,"#e8c090");PX(x+9,y+6,2,2,"#1a0a00");PX(x+13,y+6,2,2,"#1a0a00");PX(x+10,y+9,4,1,"#c07050");PX(x+4,y+12,16,12,"#c0392b");PX(x+6,y+13,12,10,"#a02020");PX(x+2,y+13,4,8,"#c0392b");PX(x+18,y+13,4,8,"#c0392b");PX(x+6,y+24,4,6,"#8B6914");PX(x+14,y+24,4,6,"#8B6914");PX(x+5,y+28,6,2,"#6B4914");PX(x+13,y+28,6,2,"#6B4914");PX(x+2,y+1,20,4,"#F5C440");PX(x+4,y-2,16,3,"#D4A030");}
+
+function drawEmbers(){var t=Date.now()/1000;embers.forEach(function(e){e.x+=e.vx+Math.sin(t+e.a*10)*.2;e.y+=e.vy-(cL?cL.ms*.02:0);if(e.y<-5){e.y=H+5;e.x=Math.random()*W;}if(e.x<0)e.x=W;if(e.x>W)e.x=0;X.fillStyle="rgba(255,"+Math.round(100+e.a*80)+",20,"+(0.3+Math.sin(t*3+e.a*7)*.2)+")";X.fillRect(Math.round(e.x),Math.round(e.y),e.s,e.s);});}
+
+function spawnLava(){if(!cL)return;for(var attempt=0;attempt<2;attempt++){if(Math.random()<cL.sr){var x;if(Math.random()<0.35){x=plx+(Math.random()-0.5)*100;}else{x=Math.random()*(W-16);}x=Math.max(0,Math.min(W-16,x));ld.push({x:x,y:-20,w:10+Math.random()*10,h:10+Math.random()*10,vy:cL.sn+Math.random()*(cL.sx-cL.sn),gl:Math.random(),rot:Math.random()*6.28});}}}
+
+function drawLava(){ld.forEach(function(d){X.save();X.translate(d.x+d.w/2,d.y+d.h/2);X.rotate(d.rot);var cols=["#cc2200","#e84400","#ff6600","#ff8800"];X.fillStyle=cols[Math.floor(d.gl*cols.length)];X.fillRect(-d.w/2,-d.h/2,d.w,d.h);X.fillStyle="#ffcc00";X.fillRect(-d.w/2+2,-d.h/2+2,d.w-4,d.h-4);X.fillStyle="#ffee88";X.fillRect(-d.w/2+3,-d.h/2+3,d.w-6,2);X.restore();d.rot+=.02;});}
+
+function drawPt(){pt=pt.filter(function(p){return p.life>0});pt.forEach(function(p){p.x+=p.vx;p.y+=p.vy;p.vy+=.12;p.life--;var a=p.life/p.ml;X.fillStyle="rgba(255,"+Math.round(80+p.life*6)+",0,"+a+")";X.fillRect(Math.round(p.x),Math.round(p.y),2+Math.round(a*2),2+Math.round(a*2));});}
+
+function explode(x,y){for(var i=0;i<18;i++){var ml=15+Math.random()*12;pt.push({x:x,y:y,vx:(Math.random()-.5)*5,vy:-1-Math.random()*4,life:ml,ml:ml});}}
+
+function hitTest(){var py=GY-PH;for(var i=ld.length-1;i>=0;i--){var d=ld[i];if(d.y+d.h>=py&&d.y<=GY&&d.x+d.w>plx+2&&d.x<plx+PW-2){explode(d.x+d.w/2,d.y+d.h/2);ld.splice(i,1);askQ();return;}}}
+
+var ky={};document.addEventListener("keydown",function(e){ky[e.key]=true;if(["ArrowLeft","ArrowRight","ArrowUp","ArrowDown"," "].indexOf(e.key)>-1)e.preventDefault();});document.addEventListener("keyup",function(e){ky[e.key]=false;});
+var td=0;C.addEventListener("touchstart",function(e){var r=C.getBoundingClientRect();td=(e.touches[0].clientX-r.left)/r.width*W<W/2?-1:1;e.preventDefault();},{passive:false});C.addEventListener("touchmove",function(e){var r=C.getBoundingClientRect();td=(e.touches[0].clientX-r.left)/r.width*W<W/2?-1:1;e.preventDefault();},{passive:false});C.addEventListener("touchend",function(){td=0;});
+
+function mP(){var dx=0;if(ky["ArrowLeft"]||ky["a"])dx-=6;if(ky["ArrowRight"]||ky["d"])dx+=6;if(td)dx=td*6;plx=Math.max(0,Math.min(W-PW,plx+dx));}
+function uL(){for(var i=ld.length-1;i>=0;i--){ld[i].y+=ld[i].vy;if(ld[i].y>GY){explode(ld[i].x+ld[i].w/2,GY);ld.splice(i,1);}}}
+function shuffle(a){var b=a.slice();for(var i=b.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=b[i];b[i]=b[j];b[j]=t;}return b;}
+
+function askQ(){
+if(uq.length>=Qs.length)uq=[];var pool=Qs.filter(function(_,i){return uq.indexOf(i)<0});var qi=Qs.indexOf(pool[Math.floor(Math.random()*pool.length)]);uq.push(qi);cq=Qs[qi];qa=true;lk=false;
+document.getElementById("ov2").classList.add("on");document.getElementById("qb").style.display="";
+document.getElementById("qw").textContent=cq.w;document.getElementById("qp").textContent=cq.p;
+document.getElementById("qn").className="qn";document.getElementById("spd").className="spd";document.getElementById("spd").textContent="";
+var oe=document.getElementById("qo");oe.innerHTML="";
+shuffle(cq.o).forEach(function(o){var btn=document.createElement("button");btn.textContent=o;btn.onclick=function(){hA(o,btn)};oe.appendChild(btn);});
+}
+
+function hA(ans,btn){
+if(lk)return;lk=true;var ok=ans===cq.a;
+document.querySelectorAll("#qo button").forEach(function(b){if(b.textContent===cq.a)b.className="cfl";else if(b===btn&&!ok)b.className="wfl";if(b.textContent!==cq.a&&b!==btn)b.className="dim";});
+var ne=document.getElementById("qn"),nl=document.getElementById("qnl"),nt=document.getElementById("qnt");
+if(ok){sc++;st++;if(st>bs)bs=st;nl.textContent="Correct! \u2713";nt.textContent=cq.n;ne.className="qn cn";
+var nL=getLevel(sc);if(nL.name!==cL.name){cL=nL;var s=document.getElementById("spd");s.textContent="\u26A0 "+nL.label+" \u2014 eruption intensifies!";s.className="spd show";}
+}else{lv--;st=0;sk=12;nl.textContent="Not quite \u2014 here\u2019s why:";nt.textContent=cq.n;ne.className="qn wn";document.getElementById("hl").classList.add("lives-lost");setTimeout(function(){document.getElementById("hl").classList.remove("lives-lost")},300);}
+uHUD();setTimeout(function(){qa=false;document.getElementById("qb").style.display="none";document.getElementById("ov2").classList.remove("on");if(lv<=0)endG();},ok?2000:4000);
+}
+
+function uHUD(){document.getElementById("hs").textContent="SCORE "+sc;var h="";for(var i=0;i<Math.max(0,lv);i++)h+="\u2665 ";document.getElementById("hl").textContent=h.trim()||"\u2620";document.getElementById("hk").textContent="STREAK "+st;if(cL){var el=document.getElementById("hlvl");el.textContent=cL.label;el.style.color=cL.col;}}
+
+// Initials
+function buildInit(){initials=[0,0,0];var c=document.getElementById("init-slots");c.innerHTML="";for(var i=0;i<3;i++){(function(idx){var s=document.createElement("div");s.className="init-slot";var u=document.createElement("button");u.textContent="\u25B2";u.onclick=function(){initials[idx]=(initials[idx]+1)%26;uInit();};var l=document.createElement("div");l.className="init-letter";l.id="il-"+idx;l.textContent="A";var d=document.createElement("button");d.textContent="\u25BC";d.onclick=function(){initials[idx]=(initials[idx]+25)%26;uInit();};s.appendChild(u);s.appendChild(l);s.appendChild(d);c.appendChild(s);})(i);}}
+function uInit(){for(var i=0;i<3;i++)document.getElementById("il-"+i).textContent=CHARS[initials[i]];}
+function getInit(){return CHARS[initials[0]]+CHARS[initials[1]]+CHARS[initials[2]];}
+
+// Leaderboard
+function renderLB(id,hlName,hlScore){
+var el=document.getElementById(id),top10=leaderboard.slice(0,10);
+var h='<h3>\u2014 HIGH SCORES \u2014</h3><div class="lb-table"><div class="lb-row header"><span class="rank">#</span><span class="name">NAME</span><span class="lb-score">SCORE</span><span class="lb-lvl">LEVEL</span></div>';
+if(!top10.length)h+='<div class="no-scores">No scores yet!</div>';
+else top10.forEach(function(e,i){var hl=hlName&&e.name===hlName&&e.score===hlScore?"hl":"";h+='<div class="lb-row '+hl+'"><span class="rank">'+(i+1)+'</span><span class="name">'+e.name+'</span><span class="lb-score">'+e.score+'</span><span class="lb-lvl">'+e.level+'</span></div>';});
+h+='</div>';el.innerHTML=h;el.style.display="block";
+}
+
+function submitScore(){
+var n=getInit();
+var entry={name:n,score:sc,streak:bs,level:cL?cL.name:"I",time:Date.now()};
+saveToDB(entry).then(function(){
+  var b=document.getElementById("submit-btn");b.textContent="SAVED!";b.style.pointerEvents="none";b.style.opacity=".5";
+  setTimeout(function(){renderLB("go-lb",n,sc);},500);
+}).catch(function(err){
+  var b=document.getElementById("submit-btn");b.textContent="ERROR";b.style.color="#ef4444";
+});
+}
+
+function toggleMenuLB(){var el=document.getElementById("menu-lb");if(el.style.display==="block"){el.style.display="none";}else{renderLB("menu-lb");}}
+
+function endG(){gg=true;cancelAnimationFrame(fi);document.getElementById("ov1").classList.add("on");document.getElementById("ss").style.display="none";document.getElementById("gover").style.display="";document.getElementById("fscore").textContent="FINAL SCORE: "+sc;document.getElementById("fstreak").textContent="Best streak: "+bs+" \u00b7 Reached "+cL.label;var b=document.getElementById("submit-btn");b.textContent="SAVE SCORE";b.style.pointerEvents="";b.style.opacity="";b.style.color="";buildInit();renderLB("go-lb");}
+
+function gLoop(){if(gg)return;var ox=0,oy=0;if(sk>0){ox=(Math.random()-.5)*8;oy=(Math.random()-.5)*8;sk--;}X.save();X.translate(ox,oy);X.clearRect(-10,-10,W+20,H+20);cL=getLevel(sc);drawSky();drawEmbers();drawGround();drawVolcano();if(!qa){mP();spawnLava();uL();hitTest();}drawLava();drawPt();drawPlayer(plx);X.restore();fi=requestAnimationFrame(gLoop);}
+
+function startGame(){lv=3;sc=0;st=0;bs=0;gg=false;qa=false;lk=false;uq=[];ld=[];pt=[];sk=0;plx=W/2-PW/2;cL=levels[0];initE();document.getElementById("ov1").classList.remove("on");document.getElementById("ov2").classList.remove("on");document.getElementById("qb").style.display="none";document.getElementById("ss").style.display="none";document.getElementById("gover").style.display="none";document.getElementById("menu-lb").style.display="none";uHUD();cancelAnimationFrame(fi);gLoop();}
+</script>
+</body>
+</html>
